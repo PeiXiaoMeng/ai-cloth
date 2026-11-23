@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 衣服商品
+model ClothingItem {
+  id        Int      @id @default(autoincrement())
+  title     String   // 例如：棉马甲 130-170码
+  image     String   // 商品图片（/static/uploads/clothes/xxx.jpg）
+  badge     String   @default("试穿") // 角标
+  category  String   @default("") // 分类：衣服 / 裤子
+  isNew     Boolean  @default(false) // 是否新品（“新上”tab）
+  sort      Int      @default(0) // 排序，越小越靠前
+  createdAt DateTime @default(now())
+
+  tryOnRecords TryOnRecord[]
+}
+
+// 小程序用户
+model User {
+  id        Int      @id @default(autoincrement())
+  openid    String   @unique
+  quotaBonus Int     @default(0) // 管理员调整的额外试穿次数（可正可负）
+  createdAt DateTime @default(now())
+
+  tryOnRecords TryOnRecord[]
+}
+
+// 试穿记录（成功一次消耗一次机会）
+model TryOnRecord {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  itemId    Int
+  status    String   @default("PENDING") // PENDING / SUCCESS / FAILED
+  inputImg  String?  // 用户上传的图片
+  resultImg String?  // 试穿结果图片
+  createdAt DateTime @default(now())
+
+  user User         @relation(fields: [userId], references: [id])
+  item ClothingItem @relation(fields: [itemId], references: [id])
+
+  @@index([userId, status])
+}
+
+// 系统配置（键值对），例如 TRY_ON_LIMIT = 3
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
