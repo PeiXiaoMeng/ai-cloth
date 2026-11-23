@@ -1,0 +1,109 @@
+.page {
+  padding: 24px;
+}
+
+.user-card {
+  background: linear-gradient(135deg, #ff7d4d, #ff4d6a);
+  border-radius: 16px;
+  padding: 40px 32px;
+  display: flex;
+  align-items: center;
+  color: #fff;
+  margin-bottom: 24px;
+}
+
+.avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  margin-right: 24px;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 34px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.user-sub {
+  font-size: 24px;
+  opacity: 0.9;
+
+  .quota-num {
+    font-size: 32px;
+    font-weight: 600;
+  }
+}
+
+.login-btn {
+  margin-top: 8px;
+  background: #fff;
+  color: #ff4d6a;
+  font-size: 24px;
+  border-radius: 30px;
+}
+
+.menu {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 32px;
+  font-size: 30px;
+  color: #333;
+}
+
+.menu-icon {
+  margin-right: 20px;
+  font-size: 34px;
+}
+
+.menu-label {
+  flex: 1;
+}
+
+.arrow {
+  color: #ccc;
+  font-size: 36px;
+}
+
+.menu-icon {
+  width: 40px;
+  height: 40px;
+  margin-right: 20px;
+  flex-shrink: 0;
+}
+
+
+.menu-item-btn {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  text-align: left;
+  padding: 32px;
+  font-size: 30px;
+  color: #333;
+  line-height: 1.4;
+
+  &::after {
+    border: none;
+  }
+}
+
+.menu-item-btn + .menu-item {
+  border-top: 1px solid #f0f1f3;
+}

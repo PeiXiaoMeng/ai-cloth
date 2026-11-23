@@ -1,0 +1,88 @@
+// 半透明遮罩 + 居中海报
+.qp-mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+}
+
+.qp-poster {
+  width: 100%;
+  background: #fff;
+  border-radius: 24px;
+  padding: 40px 36px;
+  box-sizing: border-box;
+}
+
+.qp-title {
+  text-align: center;
+  font-size: 36px;
+  font-weight: 700;
+  color: #ff4d6a;
+  margin-bottom: 20px;
+}
+
+.qp-desc {
+  font-size: 26px;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.qp-prices {
+  background: #fff5f0;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+}
+
+.qp-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.qp-price-name {
+  font-size: 28px;
+  color: #333;
+  font-weight: 500;
+}
+
+.qp-price-desc {
+  font-size: 28px;
+  color: #ff4d6a;
+  font-weight: 600;
+}
+
+.qp-qr-wrap {
+  text-align: center;
+}
+
+.qp-qr {
+  width: 360px;
+  height: 360px;
+  border-radius: 12px;
+}
+
+.qp-qr-tip {
+  font-size: 26px;
+  color: #333;
+  font-weight: 500;
+  margin-top: 16px;
+}
+
+.qp-close {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 28px;
+  color: #999;
+  padding: 16px 0;
+}
