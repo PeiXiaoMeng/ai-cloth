@@ -1,6 +1,6 @@
 {
   "name": "ai-cloth-server",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Clothing mall backend (NestJS + Prisma + DashScope AI try-on)",
   "private": true,
   "scripts": {

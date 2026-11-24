@@ -1,6 +1,6 @@
 {
   "name": "ai-cloth-client",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "WeChat Mini-Program client for the clothing mall (Taro + React + TypeScript)",
   "templateInfo": {

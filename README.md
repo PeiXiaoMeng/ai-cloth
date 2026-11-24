@@ -20,6 +20,33 @@ AI-powered virtual try-on platform: full-stack implementation with NestJS + Pris
 - Role-based admin with JWT authentication
 - Image upload & pipeline management
 
+## Roadmap
+
+> Current version: **v0.1.0 (MVP)** — see [Releases](../../releases) for the changelog.
+
+- [x] **v0.1.0 — MVP**
+  - Synchronous AI try-on, clothing mall, quota management, role-based admin
+
+- [ ] **v0.2.0 — Async try-on (task queue)**
+  - Replace the synchronous try-on (a single long HTTP request, up to 180s client timeout) with an async job pipeline:
+    upload photo → return a `taskId` immediately → AI job queued in **BullMQ** (Redis) → client polls task status → result ready
+  - Task state machine (`PENDING / PROCESSING / SUCCESS / FAILED`) persisted in the database
+  - Automatic retry with backoff on AI failures, dead-letter handling for poisoned tasks
+  - Concurrency control to protect the AI quota; per-user rate limiting
+  - Motivation: eliminates long-lived HTTP connections, client timeouts and request-blocking under concurrency
+
+- [ ] **v0.3.0 — Item search (Elasticsearch)**
+  - Full-text search over item titles with the **IK analyzer** (Chinese-aware tokenization)
+  - Filters (category, new arrivals) combined with multi-field sorted results
+  - Keyword highlighting and type-ahead suggestions (`completion` suggester)
+  - Database → Elasticsearch sync on every write, plus a **"rebuild index"** action in the admin panel as a fallback
+  - Search keyword popularity tracking
+
+- [ ] **v0.4.0 — Automated tests & CI**
+  - Unit tests for service layer with **Jest** (mocking Prisma / DashScope clients)
+  - E2E API tests with **supertest** covering auth, quota and try-on flows
+  - **GitHub Actions** pipeline: lint + test + build on every pull request
+
 ## Getting Started
 
 ### Prerequisites

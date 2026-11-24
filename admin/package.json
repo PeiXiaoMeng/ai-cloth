@@ -1,7 +1,7 @@
 {
   "name": "ai-cloth-admin",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Admin dashboard for ai-cloth (Vite + React)",
   "scripts": {
     "dev": "vite",
