@@ -23,17 +23,17 @@ export default function Detail() {
   const [photo, setPhoto] = useState<string>('')
   const [resultImg, setResultImg] = useState<string>('')
   const [submitting, setSubmitting] = useState(false)
-  // 结果图全屏预览
+  // Fullscreen preview of the result image
   const [previewVisible, setPreviewVisible] = useState(false)
-  // 试穿次数用尽海报
+  // Poster shown when the try-on quota is exhausted
   const [showQuotaPoster, setShowQuotaPoster] = useState(false)
 
-  // 页面本身不滚动，内容在 ScrollView 里滚动；
-  // 试穿成功后通过 scrollTop 把内容区滚到底部
+  // The page itself does not scroll; content scrolls inside a ScrollView.
+  // After a successful try-on, scroll the content to the bottom via scrollTop
   const [svScrollTop, setSvScrollTop] = useState(0)
   const svCounter = useRef(0)
 
-  // 记录 ScrollView 实时滚动位置，弹层关闭后强制恢复
+  // Track the ScrollView's live scroll position and force-restore it after overlays close
   const svPosRef = useRef(0)
   const restoreSv = () => {
     const target = svPosRef.current
@@ -55,7 +55,7 @@ export default function Detail() {
     try {
       setItem(await fetchItemDetail(itemId))
     } catch (e) {
-      Taro.showToast({ title: (e as Error).message || '加载失败', icon: 'none' })
+      Taro.showToast({ title: (e as Error).message || 'Failed to load', icon: 'none' })
     }
   }
 
@@ -63,12 +63,12 @@ export default function Detail() {
     try {
       setQuota(await fetchQuota())
     } catch {
-      // 未登录时不展示额度
+      // Do not show quota when not logged in
       setQuota(null)
     }
   }
 
-  // 选择照片
+  // Pick a photo
   const choosePhoto = () => {
     Taro.chooseImage({
       count: 1,
@@ -81,13 +81,13 @@ export default function Detail() {
     })
   }
 
-  // 点击试穿按钮：先登录 -> 校验额度 -> 校验照片 -> 上传并调用试穿
+  // Try-on button: login first -> check quota -> check photo -> upload and call try-on
   const handleTryOn = async () => {
     if (submitting) return
 
     try {
-      // 1. 先登录：无 token 走小程序静默登录；token 失效则清除后重新登录
-      await Taro.showLoading({ title: '登录中...', mask: true })
+      // 1. Login first: silent mini-program login when no token; re-login after clearing an expired token
+      await Taro.showLoading({ title: 'Logging in...', mask: true })
       let q: TryOnQuota
       try {
         await ensureLogin()
@@ -100,7 +100,7 @@ export default function Detail() {
       Taro.hideLoading()
       setQuota(q)
 
-      // 2. 校验剩余次数
+      // 2. Check remaining quota
       if (q.tryOnLeft <= 0) {
         Taro.hideLoading()
         setShowQuotaPoster(true)
@@ -108,26 +108,26 @@ export default function Detail() {
       }
     } catch (e) {
       Taro.hideLoading()
-      Taro.showToast({ title: (e as Error).message || '登录失败', icon: 'none' })
+      Taro.showToast({ title: (e as Error).message || 'Login failed', icon: 'none' })
       return
     }
 
-    // 3. 校验照片
+    // 3. Check the photo
     if (!photo) {
-      Taro.showToast({ title: '请先上传一张自己的照片', icon: 'none' })
+      Taro.showToast({ title: 'Please upload a photo of yourself first', icon: 'none' })
       return
     }
 
-    // 4. 上传照片并试穿（若登录态在请求间失效，重新登录后重试一次）
+    // 4. Upload the photo and try on (retry once after re-login if the session expired between requests)
     setSubmitting(true)
-    Taro.showLoading({ title: '试穿生成中，请稍候...', mask: true })
+    Taro.showLoading({ title: 'Generating try-on, please wait...', mask: true })
     try {
       let record
       try {
         record = await uploadAndTryOn(itemId, photo)
       } catch (e) {
-        const msg = (e as Error).message || ''
-        if (msg.includes('登录')) {
+        const msg = ((e as Error).message || '').toLowerCase()
+        if (msg.includes('log in')) {
           clearToken()
           await ensureLogin()
           record = await uploadAndTryOn(itemId, photo)
@@ -141,17 +141,17 @@ export default function Detail() {
         tryOnUsed: record.tryOnUsed,
         tryOnLeft: record.tryOnLeft,
       })
-      Taro.showToast({ title: '试穿成功', icon: 'success' })
-      // 自动滚动到底部，让用户直接看到试穿效果（每次用递增的值确保触发滚动）
+      Taro.showToast({ title: 'Try-on successful', icon: 'success' })
+      // Auto-scroll to the bottom so the user sees the result immediately (incrementing value ensures the scroll triggers)
       svCounter.current += 1
       setSvScrollTop(1000000 + svCounter.current * 100)
     } catch (e) {
       Taro.hideLoading()
-      const msg = (e as Error).message || '试穿失败'
-      if (msg.includes('请联系管理员')) {
+      const msg = ((e as Error).message || '').toLowerCase()
+      if (msg.includes('contact the administrator')) {
         setShowQuotaPoster(true)
       } else {
-        Taro.showModal({ title: '试穿失败', content: msg, showCancel: false })
+        Taro.showModal({ title: 'Try-on failed', content: (e as Error).message || 'Try-on failed', showCancel: false })
       }
       loadQuota()
       return
@@ -162,18 +162,19 @@ export default function Detail() {
 
   const previewResult = () => {
     if (!resultImg) return
-    // Taro.previewImage 在游客 appid 下受限，改用页面内全屏预览层
+    // Taro.previewImage is restricted under a guest appid, so use an in-page fullscreen preview instead
     setPreviewVisible(true)
   }
 
-  // 跳转试穿记录：redirectTo 替换当前详情页，返回时直接回到首页
+  // Navigate to try-on history: redirectTo replaces the current detail page, so "back" goes to the home page
   const goHistory = () => {
     Taro.redirectTo({ url: '/pages/history/history' })
   }
 
   return (
     <View className='page'>
-      {/* 内容区：独立滚动，页面本身 fixed 高度不滚动，弹层显隐不会影响滚动位置 */}
+      {/* Content area: independent scrolling; the page is fixed-height and does not scroll,
+          so showing/hiding overlays never disturbs the scroll position */}
       <ScrollView
         className='page-scroll'
         scrollY
@@ -193,39 +194,39 @@ export default function Detail() {
         )}
 
         <View className='section'>
-          <View className='section-title'>1. 上传你的照片</View>
+          <View className='section-title'>1. Upload your photo</View>
           <View className='photo-area'>
             {photo ? (
               <Image className='photo' src={photo} mode='aspectFill' onClick={choosePhoto} />
             ) : (
               <View className='photo-placeholder' onClick={choosePhoto}>
                 <Text className='plus'>+</Text>
-                <Text className='tip'>上传一张自己的照片</Text>
+                <Text className='tip'>Upload a photo of yourself</Text>
               </View>
             )}
           </View>
         </View>
 
         <View className='section'>
-          <View className='section-title'>2. AI 试穿</View>
+          <View className='section-title'>2. AI try-on</View>
           {quota && (
             <View className='quota'>
-              剩余试穿次数：
+              Remaining try-on quota:&nbsp;
               <Text className='quota-num'>{quota.tryOnLeft}</Text>
-              / {quota.tryOnLimit}
+              &nbsp;/ {quota.tryOnLimit}
             </View>
           )}
           <Button className='tryon-btn' disabled={submitting} onClick={handleTryOn}>
-            试 穿
+            Try On
           </Button>
         </View>
 
         {resultImg && (
           <View className='section'>
             <View className='result-header'>
-              <View className='section-title'>试穿结果</View>
+              <View className='section-title'>Result</View>
               <View className='history-link' onClick={goHistory}>
-                试穿记录 ›
+                History ›
               </View>
             </View>
             <Image
@@ -234,23 +235,23 @@ export default function Detail() {
               mode='aspectFit'
               onClick={previewResult}
             />
-            <View className='result-tip'>点击图片可放大查看</View>
+            <View className='result-tip'>Tap the image to zoom in</View>
           </View>
         )}
       </ScrollView>
 
-      {/* 结果图全屏预览层：点击任意位置关闭 */}
+      {/* Fullscreen preview overlay for the result image: tap anywhere to close */}
       {previewVisible && (
         <View className='preview-mask' catchMove onClick={() => {
           setPreviewVisible(false)
           restoreSv()
         }}>
           <Image className='preview-img' src={resultImg} mode='aspectFit' />
-          <View className='preview-tip'>点击任意位置关闭</View>
+          <View className='preview-tip'>Tap anywhere to close</View>
         </View>
       )}
 
-      {/* 试穿次数用尽海报 */}
+      {/* Poster shown when the try-on quota is exhausted */}
       <QuotaPoster visible={showQuotaPoster} onClose={() => {
         setShowQuotaPoster(false)
         restoreSv()

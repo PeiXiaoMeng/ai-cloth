@@ -1,4 +1,4 @@
-// 页面上下分区：header 固定，content 独立滚动
+// Page split into two sections: fixed header, independently scrolling content
 .page {
   height: 100vh;
   display: flex;
@@ -12,7 +12,7 @@
   background: #f5f6f8;
 }
 
-// 商品区容器：4 个 ScrollView 绝对定位叠放在这里，只显示当前 tab
+// Item container: 4 ScrollViews stacked absolutely here, only the active tab is visible
 .content-wrap {
   flex: 1;
   position: relative;
@@ -29,7 +29,7 @@
   box-sizing: border-box;
 }
 
-// 顶部 tab
+// Top tabs
 .tabs {
   display: flex;
   background: #fff;
@@ -61,7 +61,7 @@
   padding: 60px 0;
 }
 
-// 双列瀑布流：两列互相独立，高度不同也互不影响
+// Two-column waterfall: columns are independent, differing heights don't affect each other
 .grid {
   display: flex;
   justify-content: space-between;

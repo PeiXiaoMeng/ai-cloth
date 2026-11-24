@@ -5,17 +5,17 @@ import { ensureLogin, fetchHistory, resolveImg, type HistoryRecord } from '../..
 
 import './history.scss'
 
-// 带宽高比的记录
+// Record with a known width/height ratio
 type RecordWithRatio = HistoryRecord & { ratio: number }
 
 export default function History() {
   const [records, setRecords] = useState<RecordWithRatio[]>([])
   const [loading, setLoading] = useState(true)
   const [loggedOut, setLoggedOut] = useState(false)
-  // 全屏预览的图片地址
+  // Image URL shown in the fullscreen preview
   const [previewUrl, setPreviewUrl] = useState<string>('')
 
-  // 缓存每张结果图的宽高比，刷新时无需重新请求
+  // Cache each result image's aspect ratio so refreshing needs no re-fetch
   const ratioCache = useRef<Map<string, number>>(new Map())
 
   useDidShow(() => {
@@ -23,7 +23,7 @@ export default function History() {
   })
 
   const loadHistory = async () => {
-    // 已有数据时静默刷新，避免返回本页时列表闪烁
+    // Silent refresh when data already exists, to avoid list flicker when returning to this page
     if (records.length === 0) {
       setLoading(true)
     }
@@ -32,7 +32,7 @@ export default function History() {
       setLoggedOut(false)
       const list = (await fetchHistory()).filter((r) => r.status === 'SUCCESS' && r.resultImg)
 
-      // 读取每张结果图的宽高比（带缓存），用于固定图片高度、避免加载跳动
+      // Read each result image's aspect ratio (with caching) to fix the image height and avoid layout jumps on load
       const withRatio: RecordWithRatio[] = []
       for (const record of list) {
         const url = resolveImg(record.resultImg)
@@ -57,7 +57,7 @@ export default function History() {
     }
   }
 
-  // 点击 item：打开页面内全屏预览
+  // Tap an item: open the in-page fullscreen preview
   const preview = (record: RecordWithRatio) => {
     const url = resolveImg(record.resultImg)
     if (!url) return
@@ -66,24 +66,24 @@ export default function History() {
 
   return (
     <View className='page'>
-      {loading && <View className='loading'>加载中...</View>}
+      {loading && <View className='loading'>Loading...</View>}
 
       {!loading && loggedOut && (
         <View className='empty'>
-          请先登录后查看试穿记录
-          {'\n'}（在首页或“我的”页面点击试穿/登录即可）
+          Please log in to view your try-on history
+          {'\n'}(tap Try On on the home page or Log in on the Me page)
         </View>
       )}
 
       {!loading && !loggedOut && records.length === 0 && (
-        <View className='empty'>暂无试穿记录，去首页试试试穿吧</View>
+        <View className='empty'>No try-on records yet — try one on the home page</View>
       )}
 
       {!loading && records.length > 0 && (
         <View className='grid'>
           {records.map((record) => (
             <View key={record.id} className='card' onClick={() => preview(record)}>
-              {/* 高度按已知宽高比写死，避免 widthFix 加载后从小到大跳动 */}
+              {/* Height is fixed from the known aspect ratio to avoid widthFix jumping from small to large on load */}
               <Image
                 className='result-img'
                 src={resolveImg(record.resultImg)}
@@ -97,11 +97,11 @@ export default function History() {
         </View>
       )}
 
-      {/* 全屏预览层：点击任意位置关闭 */}
+      {/* Fullscreen preview overlay: tap anywhere to close */}
       {previewUrl && (
         <View className='preview-mask' catchMove onClick={() => setPreviewUrl('')}>
           <Image className='preview-img' src={previewUrl} mode='aspectFit' />
-          <View className='preview-tip'>点击任意位置关闭</View>
+          <View className='preview-tip'>Tap anywhere to close</View>
         </View>
       )}
     </View>

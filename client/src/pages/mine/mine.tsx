@@ -27,14 +27,14 @@ export default function Mine() {
     }
   }
 
-  // 登录（获取剩余次数需要登录态）
+  // Login (fetching the remaining quota requires an auth session)
   const handleLogin = async () => {
     try {
       await ensureLogin()
       await loadQuota()
-      Taro.showToast({ title: '登录成功', icon: 'success' })
+      Taro.showToast({ title: 'Login successful', icon: 'success' })
     } catch (e) {
-      Taro.showToast({ title: (e as Error).message || '登录失败', icon: 'none' })
+      Taro.showToast({ title: (e as Error).message || 'Login failed', icon: 'none' })
     }
   }
 
@@ -44,41 +44,41 @@ export default function Mine() {
 
   return (
     <View className='page'>
-      {/* 用户信息卡片 */}
+      {/* User info card */}
       <View className='user-card'>
         <View className='avatar'>衣</View>
         <View className='user-info'>
           {quota ? (
             <>
-              <View className='user-name'>已登录</View>
+              <View className='user-name'>Logged in</View>
               <View className='user-sub'>
-                剩余试穿次数：
+                Remaining try-on quota:&nbsp;
                 <Text className='quota-num'>{quota.tryOnLeft}</Text>
-                / {quota.tryOnLimit}
+                &nbsp;/ {quota.tryOnLimit}
               </View>
             </>
           ) : (
             <>
-              <View className='user-name'>未登录</View>
+              <View className='user-name'>Not logged in</View>
               <Button className='login-btn' size='mini' onClick={handleLogin}>
-                点击登录
+                Log in
               </Button>
             </>
           )}
         </View>
       </View>
 
-      {/* 功能栏目 */}
+      {/* Menu */}
       <View className='menu'>
         <View className='menu-item' onClick={goHistory}>
           <Image className='menu-icon' src={historyIcon} mode='aspectFit' />
-          <Text className='menu-label'>试穿记录</Text>
+          <Text className='menu-label'>Try-on History</Text>
           <Text className='arrow'>›</Text>
         </View>
 
         <Button className='menu-item menu-item-btn' openType='contact'>
           <Image className='menu-icon' src={customIcon} mode='aspectFit' />
-          <Text className='menu-label'>联系客服</Text>
+          <Text className='menu-label'>Contact Support</Text>
           <Text className='arrow'>›</Text>
         </Button>
       </View>

@@ -1,5 +1,5 @@
 .page {
-  // 页面固定高度不滚动，内容在 .page-scroll 内滚动
+  // Fixed page height, no page-level scrolling; content scrolls inside .page-scroll
   height: 100vh;
   overflow: hidden;
   display: flex;
@@ -123,7 +123,7 @@
   margin-top: 16px;
 }
 
-// 试穿结果标题行：左标题 + 右侧试穿记录入口
+// Result header row: title on the left, history link on the right
 .result-header {
   display: flex;
   align-items: center;
@@ -137,7 +137,7 @@
   font-weight: 500;
 }
 
-// 结果图全屏预览层
+// Fullscreen preview overlay for the result image
 .preview-mask {
   position: fixed;
   left: 0;

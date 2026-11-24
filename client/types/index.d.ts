@@ -1,29 +1,29 @@
 /**
- * 全局类型定义
+ * Global type definitions
  */
 
-// 衣服商品
+// Clothing item
 export interface ClothingItem {
   id: number
   title: string
   image: string
   badge: string
-  /** 分类：衣服 / 裤子 */
+  /** Category: 上衣 (tops) / 裤子 (bottoms) */
   category: string
-  /** 是否新品（“新上”tab） */
+  /** Whether it is a new arrival ("New" tab) */
   isNew: boolean
   sort: number
   createdAt: string
 }
 
-// 用户试穿额度
+// User try-on quota
 export interface TryOnQuota {
   tryOnLimit: number
   tryOnUsed: number
   tryOnLeft: number
 }
 
-// 试穿记录
+// Try-on record
 export interface TryOnRecord extends TryOnQuota {
   id: number
   userId: number

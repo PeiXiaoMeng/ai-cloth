@@ -1,3 +1,3 @@
 export default definePageConfig({
-  navigationBarTitleText: '服装商城',
+  navigationBarTitleText: 'Fashion Mall',
 })

@@ -13,13 +13,13 @@ export default defineAppConfig({
     list: [
       {
         pagePath: 'pages/index/index',
-        text: '首页',
+        text: 'Home',
         iconPath: './assets/tabbar/home.png',
         selectedIconPath: './assets/tabbar/home-active.png',
       },
       {
         pagePath: 'pages/mine/mine',
-        text: '我的',
+        text: 'Me',
         iconPath: './assets/tabbar/mine.png',
         selectedIconPath: './assets/tabbar/mine-active.png',
       },
@@ -28,7 +28,7 @@ export default defineAppConfig({
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#fff',
-    navigationBarTitleText: '服装商城',
+    navigationBarTitleText: 'Fashion Mall',
     navigationBarTextStyle: 'black',
   },
 })

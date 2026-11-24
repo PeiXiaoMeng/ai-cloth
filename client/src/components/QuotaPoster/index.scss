@@ -1,4 +1,4 @@
-// 半透明遮罩 + 居中海报
+// Semi-transparent mask + centered poster
 .qp-mask {
   position: fixed;
   left: 0;
@@ -66,10 +66,30 @@
   text-align: center;
 }
 
-.qp-qr {
+// QR code placeholder box (swap back to .qp-qr image styles when the real QR code is added)
+.qp-qr-placeholder {
   width: 360px;
   height: 360px;
+  margin: 0 auto;
+  border: 2px dashed #c0c4cc;
   border-radius: 12px;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.qp-qr-placeholder-text {
+  font-size: 28px;
+  color: #909399;
+  font-weight: 500;
+}
+
+.qp-qr-placeholder-sub {
+  font-size: 24px;
+  color: #b8bcc4;
+  margin-top: 12px;
 }
 
 .qp-qr-tip {

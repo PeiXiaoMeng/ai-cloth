@@ -6,15 +6,15 @@ import type { ClothingItem } from '../../../types'
 
 import './index.scss'
 
-// 带宽高比的商品
+// Item with a known width/height ratio
 type ItemWithRatio = ClothingItem & { ratio: number }
 
-// 顶部 tab
+// Top tabs
 const TABS = [
-  { key: 'all', label: '全部' },
-  { key: 'new', label: '新上' },
-  { key: 'clothes', label: '衣服' },
-  { key: 'pants', label: '裤子' },
+  { key: 'all', label: 'All' },
+  { key: 'new', label: 'New' },
+  { key: 'clothes', label: 'Tops' },
+  { key: 'pants', label: 'Bottoms' },
 ] as const
 
 type TabKey = (typeof TABS)[number]['key']
@@ -22,7 +22,7 @@ type TabKey = (typeof TABS)[number]['key']
 export default function Index() {
   const [items, setItems] = useState<ItemWithRatio[]>([])
   const [tab, setTab] = useState<TabKey>('all')
-  // 每个 tab 独立的两列瀑布流数据
+  // Independent two-column waterfall data per tab
   const [columnsByTab, setColumnsByTab] = useState<Record<TabKey, ItemWithRatio[][]>>({
     all: [[], []],
     new: [[], []],
@@ -31,10 +31,10 @@ export default function Index() {
   })
   const [loading, setLoading] = useState(true)
 
-  // 缓存每张图的宽高比，切 tab 时无需重新请求
+  // Cache each image's aspect ratio so switching tabs needs no re-fetch
   const ratioCache = useRef<Map<number, number>>(new Map())
 
-  // 仅首次进入时加载；返回首页不重新请求接口，彻底避免闪烁
+  // Load only on first mount; returning to the home page does not re-fetch, avoiding flicker entirely
   useEffect(() => {
     loadItems()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -42,13 +42,13 @@ export default function Index() {
 
   const loadItems = async () => {
     try {
-      // 已有数据时静默刷新，避免返回首页时列表闪烁
+      // Silent refresh when data already exists, to avoid list flicker when returning home
       if (items.length === 0) {
         setLoading(true)
       }
       const list = (await fetchItems()) || []
 
-      // 读取每张图片的宽高比（带缓存）
+      // Read each image's aspect ratio (with caching)
       const withRatio: ItemWithRatio[] = []
       for (const item of list) {
         let ratio = ratioCache.current.get(item.id) ?? 1
@@ -57,7 +57,7 @@ export default function Index() {
             const info = await Taro.getImageInfo({ src: resolveImg(item.image) })
             ratio = info.height / info.width
           } catch {
-            // 取不到尺寸时按 1:1 处理
+            // Fall back to 1:1 when the size is unavailable
           }
           ratioCache.current.set(item.id, ratio)
         }
@@ -65,13 +65,13 @@ export default function Index() {
       }
       setItems(withRatio)
     } catch (e) {
-      Taro.showToast({ title: (e as Error).message || '加载失败', icon: 'none' })
+      Taro.showToast({ title: (e as Error).message || 'Failed to load', icon: 'none' })
     } finally {
       setLoading(false)
     }
   }
 
-  // 数据变化时，为每个 tab 筛选并分配瀑布流两列
+  // When the data changes, filter and distribute items into two waterfall columns per tab
   useEffect(() => {
     const build = (key: TabKey): ItemWithRatio[][] => {
       const filtered = items.filter((item) => {
@@ -80,7 +80,7 @@ export default function Index() {
         if (key === 'pants') return item.category === '裤子'
         return true
       })
-      // 按“较矮的列优先”分配，实现瀑布流
+      // Assign to the shorter column first to build the waterfall layout
       const cols: ItemWithRatio[][] = [[], []]
       const colHeights = [0, 0]
       for (const item of filtered) {
@@ -107,7 +107,7 @@ export default function Index() {
 
   return (
     <View className='page'>
-      {/* 顶部 tab：固定不动 */}
+      {/* Top tabs: fixed */}
       <View className='header'>
         <View className='tabs'>
           {TABS.map((t) => (
@@ -122,7 +122,7 @@ export default function Index() {
         </View>
       </View>
 
-      {/* 商品区：每个 tab 一个独立 ScrollView 叠放，切换 visibility，保留各自滚动位置 */}
+      {/* Item area: one stacked ScrollView per tab, toggled via visibility to keep each scroll position */}
       <View className='content-wrap'>
         {TABS.map((t) => {
           const cols = columnsByTab[t.key]
@@ -151,7 +151,7 @@ export default function Index() {
                 </View>
               ))}
             </View>
-            {!loading && count === 0 && <View className='empty'>该分类下暂无商品</View>}
+            {!loading && count === 0 && <View className='empty'>No items in this category</View>}
           </ScrollView>
           )
         })}

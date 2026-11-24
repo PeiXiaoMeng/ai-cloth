@@ -1,7 +1,7 @@
 import Taro from '@tarojs/taro'
 import type { ClothingItem, TryOnQuota } from '../../types'
 
-/** 服务端地址：真机调试请改成电脑的局域网 IP，如 http://192.168.1.100:3000 */
+/** Server base URL: for real-device debugging, use your computer's LAN IP, e.g. http://192.168.1.100:3000 */
 export const BASE_URL = 'http://localhost:3000'
 
 const TOKEN_KEY = 'ai_cloth_token'
@@ -14,7 +14,7 @@ export function clearToken() {
   Taro.removeStorageSync(TOKEN_KEY)
 }
 
-/** 统一请求封装，自动携带 token */
+/** Unified request wrapper that attaches the token automatically */
 export async function request<T = any>(url: string, options: Partial<Taro.request.Option> = {}): Promise<T> {
   const res = await Taro.request({
     url: `${BASE_URL}${url}`,
@@ -28,17 +28,17 @@ export async function request<T = any>(url: string, options: Partial<Taro.reques
 
   if (res.statusCode === 401) {
     clearToken()
-    throw new Error('请先登录')
+    throw new Error('Please log in first')
   }
   if (res.statusCode >= 400) {
-    throw new Error((res.data && res.data.message) || `请求失败 (${res.statusCode})`)
+    throw new Error((res.data && res.data.message) || `Request failed (${res.statusCode})`)
   }
   return res.data as T
 }
 
 /**
- * 确保已登录：无 token 时调用 Taro.login 获取 code，
- * 请求服务端 /auth/login 换取 JWT 并缓存
+ * Ensure the user is logged in: when no token exists, call Taro.login to get a code,
+ * exchange it for a JWT via the server /auth/login endpoint, and cache it
  */
 export async function ensureLogin(): Promise<string> {
   if (getToken()) return getToken()
@@ -51,7 +51,7 @@ export async function ensureLogin(): Promise<string> {
   })
 
   if (res.statusCode >= 400) {
-    throw new Error((res.data && res.data.message) || '登录失败')
+    throw new Error((res.data && res.data.message) || 'Login failed')
   }
 
   const { token } = res.data as { token: string }
@@ -59,28 +59,28 @@ export async function ensureLogin(): Promise<string> {
   return token
 }
 
-/** 图片地址：服务端返回相对路径时补全为完整 URL */
+/** Image URL: build the full URL when the server returns a relative path */
 export function resolveImg(url: string | null | undefined): string {
   if (!url) return ''
   return url.startsWith('http') ? url : `https://copilot-antivirus-scoreless.ngrok-free.dev${url}`
 }
 
-/** 获取商品列表 */
+/** Fetch the item list */
 export function fetchItems(): Promise<ClothingItem[]> {
   return request<ClothingItem[]>('/items')
 }
 
-/** 获取商品详情 */
+/** Fetch item detail */
 export function fetchItemDetail(id: string | number): Promise<ClothingItem> {
   return request<ClothingItem>(`/items/${id}`)
 }
 
-/** 查询我的试穿剩余次数 */
+/** Fetch my remaining try-on quota */
 export function fetchQuota(): Promise<TryOnQuota> {
   return request<TryOnQuota>('/try-on/quota')
 }
 
-/** 上传照片并试穿（同步返回结果） */
+/** Upload a photo and try on (synchronous result) */
 export function uploadAndTryOn(
   itemId: string | number,
   filePath: string,
@@ -96,16 +96,16 @@ export function uploadAndTryOn(
       },
       success: (res) => {
         if (res.statusCode === 403) {
-          reject(new Error('您的试穿次数已用完，请联系管理员'))
+          reject(new Error('Your try-on quota is exhausted, please contact the administrator'))
           return
         }
         if (res.statusCode >= 400) {
-          let msg = `试穿失败 (${res.statusCode})`
+          let msg = `Try-on failed (${res.statusCode})`
           try {
             const data = JSON.parse(res.data)
             msg = data.message || msg
           } catch {
-            // 保留默认提示
+            // keep the default message
           }
           reject(new Error(msg))
           return
@@ -113,15 +113,15 @@ export function uploadAndTryOn(
         try {
           resolve(JSON.parse(res.data))
         } catch {
-          reject(new Error('返回数据解析失败'))
+          reject(new Error('Failed to parse the response data'))
         }
       },
-      fail: (err) => reject(new Error(err.errMsg || '上传失败')),
+      fail: (err) => reject(new Error(err.errMsg || 'Upload failed')),
     })
   })
 }
 
-/** 试穿历史记录 */
+/** Try-on history record */
 export interface HistoryRecord {
   id: number
   itemId: number
@@ -131,7 +131,7 @@ export interface HistoryRecord {
   item: { title: string; image: string }
 }
 
-/** 获取我的试穿历史 */
+/** Fetch my try-on history */
 export function fetchHistory(): Promise<HistoryRecord[]> {
   return request<HistoryRecord[]>('/try-on/history')
 }
