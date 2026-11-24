@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 
 /**
- * 阿里百炼（DashScope）AI 试穿服务
- * 使用异步任务接口：提交任务 -> 轮询任务状态 -> 拿到结果图 URL
+ * DashScope AI virtual try-on service
+ * Uses the multimodal-generation endpoint: two images + a prompt, returns the result image synchronously
  */
 @Injectable()
 export class DashscopeService {
@@ -18,8 +18,8 @@ export class DashscopeService {
   }
 
   /**
-   * MOCK 模式：未配置 API Key 时可直接联调整个流程（直接返回原图作为结果）
-   * 设置环境变量 DASHSCOPE_MOCK=true 开启
+   * MOCK mode: without an API key the whole flow can still be exercised (returns the person image as the result)
+   * Enable by setting the environment variable DASHSCOPE_MOCK=true
    */
   private get mock() {
     return (process.env.DASHSCOPE_MOCK || '').toLowerCase() === 'true';
@@ -28,15 +28,15 @@ export class DashscopeService {
   async tryOn(
     personImageUrl: string,
     garmentImageUrl: string,
-    _garmentType?: string, // 兼容旧参数，qwen-image 不再需要
+    _garmentType?: string, // legacy parameter, no longer needed by qwen-image
   ): Promise<string> {
-    this.logger.log(`[tryOn] 开始, model=${this.model}, person=${personImageUrl}, garment=${garmentImageUrl}`);
+    this.logger.log(`[tryOn] start, model=${this.model}, person=${personImageUrl}, garment=${garmentImageUrl}`);
     if (this.mock || !this.apiKey) {
-      this.logger.warn('[tryOn] MOCK 模式或未配置 API Key，直接返回原图');
+      this.logger.warn('[tryOn] MOCK mode or API key not configured, returning the person image as-is');
       return personImageUrl;
     }
 
-    // qwen-image-2.0：多模态对话接口，两张图 + 提示词，同步返回结果图
+    // qwen-image-2.0: multimodal chat endpoint, two images + prompt, returns the result image synchronously
     const requestBody = {
       model: this.model,
       input: {
@@ -47,6 +47,7 @@ export class DashscopeService {
               { image: personImageUrl },
               { image: garmentImageUrl },
               {
+                // Chinese prompt is intentional: it is sent to the qwen model and tuned for it
                 text: '第一张图中是一位人物，第二张图中是一件服装。请把第二张图中的服装穿到第一张图人物的身上，生成试穿效果：保持人物的姿势、脸部、发型和背景完全不变，服装要贴合人物身体，逼真自然，只生成一张图片。',
               },
             ],
@@ -55,7 +56,7 @@ export class DashscopeService {
       },
       parameters: { n: 1, watermark: false },
     };
-    this.logger.log(`[tryOn] 请求体: ${JSON.stringify(requestBody)}`);
+    this.logger.log(`[tryOn] request body: ${JSON.stringify(requestBody)}`);
 
     let res;
     try {
@@ -67,18 +68,18 @@ export class DashscopeService {
             Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
-          timeout: 180000, // 图像生成较慢，放宽超时
+          timeout: 180000, // image generation is slow, use a generous timeout
         },
       );
     } catch (e: any) {
       const detail = e?.response?.data ?? e.message;
-      this.logger.error(`[tryOn] 调用失败: HTTP ${e?.response?.status ?? '-'} ${JSON.stringify(detail)}`);
-      throw new Error(`试穿调用失败: ${JSON.stringify(detail)}`);
+      this.logger.error(`[tryOn] call failed: HTTP ${e?.response?.status ?? '-'} ${JSON.stringify(detail)}`);
+      throw new Error(`Try-on call failed: ${JSON.stringify(detail)}`);
     }
 
-    this.logger.log(`[tryOn] 响应: ${JSON.stringify(res.data).slice(0, 2000)}`);
+    this.logger.log(`[tryOn] response: ${JSON.stringify(res.data).slice(0, 2000)}`);
 
-    // 从响应中解析结果图 URL（content 数组里的 image 项；兜底用正则找结果图 URL）
+    // Parse the result image URL from the response (the image item in the content array; fall back to a regex scan)
     const content = res?.data?.output?.choices?.[0]?.message?.content;
     let resultUrl = Array.isArray(content)
       ? content.find((c: any) => c.image || c.image_url)?.image || content.find((c: any) => c.image || c.image_url)?.image_url
@@ -89,13 +90,12 @@ export class DashscopeService {
       resultUrl = m ? m[0].replace(/\\\//g, '/') : null;
     }
     if (!resultUrl) {
-      this.logger.error(`[tryOn] 未能从响应中解析出结果图: ${JSON.stringify(res.data).slice(0, 1000)}`);
-      throw new Error('试穿成功但未返回图片地址');
+      this.logger.error(`[tryOn] failed to parse the result image from the response: ${JSON.stringify(res.data).slice(0, 1000)}`);
+      throw new Error('Try-on succeeded but no image URL was returned');
     }
-    this.logger.log(`[tryOn] 成功, 结果图: ${resultUrl}`);
+    this.logger.log(`[tryOn] success, result image: ${resultUrl}`);
     return resultUrl;
   }
-
 
 
   private sleep(ms: number) {

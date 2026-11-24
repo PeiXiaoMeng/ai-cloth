@@ -12,33 +12,33 @@ export class TryonService {
   ) {}
 
   /**
-   * 试穿主流程：
-   * 1. 校验商品与用户剩余次数（超出则提示请联系管理员）
-   * 2. 创建 PENDING 记录
-   * 3. 调用阿里百炼生成试穿结果
-   * 4. 只有成功才消耗次数（记录状态为 SUCCESS）
+   * Main try-on flow:
+   * 1. Validate the item and the user's remaining quota (prompt to contact admin when exhausted)
+   * 2. Create a PENDING record
+   * 3. Call DashScope to generate the try-on result
+   * 4. Only consume quota on success (record status = SUCCESS)
    */
   async tryOn(opts: {
     userId: number;
     itemId: number;
-    personImageUrl: string; // 用户上传图片的公网可访问 URL
-    baseUrl: string; // 例如 http://localhost:3000，用于拼接商品图 URL
+    personImageUrl: string; // publicly accessible URL of the user-uploaded photo
+    baseUrl: string; // e.g. http://localhost:3000, used to build the garment image URL
   }) {
     const { userId, itemId, personImageUrl, baseUrl } = opts;
 
     const item = await this.prisma.clothingItem.findUnique({ where: { id: itemId } });
     if (!item) {
-      throw new NotFoundException('商品不存在');
+      throw new NotFoundException('Item not found');
     }
 
-    // 次数校验：基础次数 + 管理员调整的 bonus
+    // Quota check: base limit + admin-adjusted bonus
     const limit = await this.settingsService.getTryOnLimit();
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     const used = await this.prisma.tryOnRecord.count({
       where: { userId, itemId, status: 'SUCCESS' },
     });
     if (used >= limit + (user?.quotaBonus ?? 0)) {
-      throw new ForbiddenException('您的试穿次数已用完，请联系管理员');
+      throw new ForbiddenException('Your try-on quota is exhausted, please contact the administrator');
     }
 
     const record = await this.prisma.tryOnRecord.create({
@@ -55,18 +55,18 @@ export class TryonService {
         ? item.image
         : `${baseUrl}${item.image}`;
 
-      // 分类：衣服=上装，裤子=下装
+      // Category mapping: 上衣 = tops, 裤子 = bottoms
         const garmentType = item.category === '裤子' ? 'bottoms' : 'tops';
         const resultUrl = await this.dashscopeService.tryOn(personImageUrl, garmentImageUrl, garmentType);
 
 
-      // 结果图下载到本地，避免小程序端引用外域图片
+      // Download the result image locally so the mini-program avoids cross-origin image references
       let resultImg = resultUrl;
       if (resultUrl.startsWith('http')) {
         try {
           resultImg = await this.downloadToPublic(resultUrl);
         } catch {
-          // 下载失败则直接使用原始 URL
+          // Fall back to the original URL if the download fails
         }
       }
 
@@ -79,7 +79,7 @@ export class TryonService {
         where: { id: record.id },
         data: { status: 'FAILED' },
       });
-      throw new BadRequestException(e.message || '试穿失败，请稍后重试');
+      throw new BadRequestException(e.message || 'Try-on failed, please try again later');
     }
   }
 
@@ -90,7 +90,7 @@ export class TryonService {
     });
   }
 
-  // 用户剩余次数（基础 + 管理员调整的 bonus）
+  // User's remaining quota (base limit + admin-adjusted bonus)
   async leftCount(userId: number) {
     const limit = await this.settingsService.getTryOnLimit();
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -105,7 +105,7 @@ export class TryonService {
     };
   }
 
-  // 把 DashScope 返回的结果图下载到 public/uploads，返回本地静态路径
+  // Download the result image from DashScope into public/uploads and return the local static path
   private async downloadToPublic(url: string): Promise<string> {
     const axios = await import('axios').then((m) => m.default);
     const fs = await import('fs');

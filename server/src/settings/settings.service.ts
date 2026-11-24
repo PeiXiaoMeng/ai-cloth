@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class SettingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // 读取试穿次数上限（默认 3）
+  // Read the try-on quota limit (default: 3)
   async getTryOnLimit(): Promise<number> {
     const setting = await this.prisma.setting.upsert({
       where: { key: 'TRY_ON_LIMIT' },
@@ -15,10 +15,10 @@ export class SettingsService {
     return Number(setting.value);
   }
 
-  // 修改试穿次数上限（管理员通过接口或直接改数据库配置）
+  // Update the try-on quota limit (admin updates via the API or directly in the database)
   async setTryOnLimit(value: number): Promise<number> {
     if (!Number.isInteger(value) || value < 0) {
-      throw new Error('试穿次数必须是大于等于 0 的整数');
+      throw new Error('The try-on quota must be an integer greater than or equal to 0');
     }
     await this.prisma.setting.upsert({
       where: { key: 'TRY_ON_LIMIT' },

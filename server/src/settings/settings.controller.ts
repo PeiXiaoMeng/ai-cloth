@@ -5,13 +5,13 @@ import { SettingsService } from './settings.service';
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 
-  // 获取试穿次数配置
+  // Get the try-on quota setting
   @Get('try-on-limit')
   async getTryOnLimit() {
     return { tryOnLimit: await this.settingsService.getTryOnLimit() };
   }
 
-  // 修改试穿次数配置（生产环境建议加管理员鉴权）
+  // Update the try-on quota setting (add admin auth before deploying to production)
   @Put('try-on-limit')
   async setTryOnLimit(@Body() body: { value: number }) {
     return { tryOnLimit: await this.settingsService.setTryOnLimit(body.value) };

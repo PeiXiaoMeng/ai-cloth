@@ -19,9 +19,10 @@ import { AdminGuard } from './admin.guard';
 import { AdminService } from './admin.service';
 import { PrismaService } from '../prisma/prisma.service';
 
+// Category values are Chinese on purpose: they are data values shared with the mini-program filters
 const CATEGORIES = ['上衣', '裤子'];
 
-// 商品图片上传：存到 public/uploads/items/
+// Item image upload: stored under public/uploads/items/
 const itemUploadInterceptor = () =>
   FileInterceptor('file', {
     storage: diskStorage({
@@ -44,7 +45,7 @@ const itemUploadInterceptor = () =>
       if (/^image\//.test(file.mimetype)) {
         cb(null, true);
       } else {
-        cb(new BadRequestException('只能上传图片文件'), false);
+        cb(new BadRequestException('Only image files are allowed'), false);
       }
     },
   });
@@ -57,7 +58,7 @@ export class AdminController {
     private readonly jwtService: JwtService,
   ) {}
 
-  /** 管理员登录：返回 7 天有效期的 token */
+  /** Admin login: returns a token valid for 7 days */
   @Post('login')
   async login(@Body() body: { username: string; password: string }) {
     const user = await this.adminService.login(
@@ -65,7 +66,7 @@ export class AdminController {
       String(body.password || ''),
     );
     if (!user) {
-      throw new BadRequestException('账号或密码错误');
+      throw new BadRequestException('Invalid username or password');
     }
     const token = await this.jwtService.signAsync(
       { sub: 'admin', role: 'admin' },
@@ -74,7 +75,7 @@ export class AdminController {
     return { token, expiresIn: 7 * 24 * 3600 };
   }
 
-  // ---------- 商品管理 ----------
+  // ---------- Item management ----------
 
   @Get('items')
   @UseGuards(AdminGuard)
@@ -82,7 +83,7 @@ export class AdminController {
     return this.adminService.listItems();
   }
 
-  /** 添加商品：multipart（title, category, file） */
+  /** Create an item: multipart (title, category, file) */
   @Post('items')
   @UseGuards(AdminGuard)
   @UseInterceptors(itemUploadInterceptor())
@@ -92,9 +93,9 @@ export class AdminController {
   ) {
     const title = String(body.title || '').trim();
     const category = String(body.category || '');
-    if (!title) throw new BadRequestException('请填写商品标题');
-    if (!CATEGORIES.includes(category)) throw new BadRequestException('分类必须是 上衣 或 裤子');
-    if (!file) throw new BadRequestException('请上传商品图片');
+    if (!title) throw new BadRequestException('Item title is required');
+    if (!CATEGORIES.includes(category)) throw new BadRequestException('Category must be 上衣 (tops) or 裤子 (bottoms)');
+    if (!file) throw new BadRequestException('Item image is required');
 
     const max = await this.prisma.clothingItem.aggregate({ _max: { sort: true } });
     const item = await this.prisma.clothingItem.create({
@@ -103,13 +104,13 @@ export class AdminController {
         category,
         image: `/static/uploads/items/${file.filename}`,
         sort: (max._max.sort ?? 0) + 1,
-        badge: '试穿',
+        badge: '试穿', // badge label rendered by the mini-program
       },
     });
     return { ...item, isNew: true };
   }
 
-  /** 修改商品：multipart（title, category 可选，file 可选换图） */
+  /** Update an item: multipart (title, category optional, file optional to replace the image) */
   @Put('items/:id')
   @UseGuards(AdminGuard)
   @UseInterceptors(itemUploadInterceptor())
@@ -119,7 +120,7 @@ export class AdminController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     const exist = await this.prisma.clothingItem.findUnique({ where: { id: Number(id) } });
-    if (!exist) throw new BadRequestException('商品不存在');
+    if (!exist) throw new BadRequestException('Item not found');
 
     const data: { title?: string; category?: string; image?: string } = {};
     if (body.title !== undefined && String(body.title).trim()) {
@@ -128,7 +129,7 @@ export class AdminController {
     if (body.category !== undefined) {
       const category = String(body.category);
       if (!CATEGORIES.includes(category)) {
-        throw new BadRequestException('分类必须是 上衣 或 裤子');
+        throw new BadRequestException('Category must be 上衣 (tops) or 裤子 (bottoms)');
       }
       data.category = category;
     }
@@ -136,7 +137,7 @@ export class AdminController {
       data.image = `/static/uploads/items/${file.filename}`;
     }
     if (Object.keys(data).length === 0) {
-      throw new BadRequestException('没有需要修改的内容');
+      throw new BadRequestException('Nothing to update');
     }
     const item = await this.prisma.clothingItem.update({
       where: { id: Number(id) },
@@ -145,18 +146,18 @@ export class AdminController {
     return { ...item, isNew: this.adminService.isNewByCreatedAt(item.createdAt) };
   }
 
-  /** 删除商品（同时删除其试穿记录） */
+  /** Delete an item (also removes its try-on records) */
   @Delete('items/:id')
   @UseGuards(AdminGuard)
   async deleteItem(@Param('id') id: string) {
     const exist = await this.prisma.clothingItem.findUnique({ where: { id: Number(id) } });
-    if (!exist) throw new BadRequestException('商品不存在');
+    if (!exist) throw new BadRequestException('Item not found');
     await this.prisma.tryOnRecord.deleteMany({ where: { itemId: Number(id) } });
     await this.prisma.clothingItem.delete({ where: { id: Number(id) } });
     return { ok: true };
   }
 
-  // ---------- 用户试穿次数管理 ----------
+  // ---------- User quota management ----------
 
   @Get('users')
   @UseGuards(AdminGuard)
@@ -164,7 +165,7 @@ export class AdminController {
     return this.adminService.listUsers();
   }
 
-  /** 调整用户试穿次数：{ delta: number } 正加负减 */
+  /** Adjust a user's try-on quota: { delta: number }, positive to add / negative to subtract */
   @Post('users/:id/quota')
   @UseGuards(AdminGuard)
   async adjustQuota(@Param('id') id: string, @Body() body: { delta: number }) {

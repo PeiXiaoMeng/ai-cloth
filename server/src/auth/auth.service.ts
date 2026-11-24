@@ -11,15 +11,15 @@ export class AuthService {
   ) {}
 
   /**
-   * 小程序登录：客户端 wx.login 拿到 code，传到这里
-   * 服务端用 code 调微信接口换 openid，然后签发 JWT
+   * Mini-program login: the client gets a code via wx.login and sends it here
+   * The server exchanges the code for an openid via the WeChat API, then issues a JWT
    */
   async wxLogin(code: string) {
     if (!code) {
-      throw new Error('缺少 code');
+      throw new Error('Missing code');
     }
 
-    // 开发联调模式：WX_MOCK=true 时跳过微信接口，直接用 code 当 openid
+    // Dev mode: when WX_MOCK=true, skip the WeChat API and use the code as the openid directly
     if ((process.env.WX_MOCK || '').toLowerCase() === 'true') {
       const openid = `mock_${code}`;
       const mockUser = await this.prisma.user.upsert({
@@ -34,7 +34,7 @@ export class AuthService {
     const appid = process.env.WX_APPID;
     const secret = process.env.WX_SECRET;
     if (!appid || !secret) {
-      throw new Error('服务端未配置 WX_APPID / WX_SECRET');
+      throw new Error('WX_APPID / WX_SECRET are not configured on the server');
     }
 
     const { data } = await axios.get(
@@ -50,7 +50,7 @@ export class AuthService {
     );
 
     if (data.errcode && data.errcode !== 0) {
-      throw new Error(`微信登录失败: ${data.errcode} ${data.errmsg}`);
+      throw new Error(`WeChat login failed: ${data.errcode} ${data.errmsg}`);
     }
 
     const openid: string = data.openid;

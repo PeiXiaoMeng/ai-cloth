@@ -16,10 +16,10 @@ export class TryonController {
   ) {}
 
   /**
-   * 试穿接口：
-   * - 需要登录（Authorization: Bearer <token>）
-   * - multipart/form-data: file=用户上传的照片
-   * - 服务端校验剩余次数后调用阿里百炼，返回试穿结果
+   * Try-on endpoint:
+   * - Requires auth (Authorization: Bearer <token>)
+   * - multipart/form-data: file = user-uploaded photo
+   * - Validates remaining quota server-side, then calls DashScope and returns the result
    */
   @Post(':itemId')
   @UseGuards(JwtAuthGuard)
@@ -43,7 +43,7 @@ export class TryonController {
         if (/^image\//.test(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new BadRequestException('只能上传图片文件'), false);
+          cb(new BadRequestException('Only image files are allowed'), false);
         }
       },
     }),
@@ -54,12 +54,11 @@ export class TryonController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
-      throw new BadRequestException('请上传一张自己的照片');
+      throw new BadRequestException('Please upload a photo of yourself');
     }
     const protocol = req.protocol;
     const host = req.get('host');
-    // const baseUrl = `${protocol}://${host}`;
-    // 图片公网可访问地址：优先用 PUBLIC_BASE_URL（内网穿透/线上域名）
+    // Publicly accessible base URL for images: prefer PUBLIC_BASE_URL (tunnel / production domain)
     const baseUrl = (
         process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`
     ).replace(/\/$/, '');
@@ -77,21 +76,21 @@ export class TryonController {
     };
   }
 
-  // 我的剩余试穿次数
+  // My remaining try-on quota
   @Get('quota')
   @UseGuards(JwtAuthGuard)
   async quota(@Req() req: Request & { userId: number }) {
     return this.tryonService.leftCount(req.userId);
   }
 
-  // 查询某次试穿记录
+  // Get a single try-on record
   @Get('record/:id')
   @UseGuards(JwtAuthGuard)
   async record(@Req() req: Request & { userId: number }, @Param('id') id: string) {
     return this.tryonService.getRecord(Number(id), req.userId);
   }
 
-  // 我的试穿历史
+  // My try-on history
   @Get('history')
   @UseGuards(JwtAuthGuard)
   async history(@Req() req: Request & { userId: number }) {

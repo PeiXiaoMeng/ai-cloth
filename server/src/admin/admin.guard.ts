@@ -7,8 +7,8 @@ import {
 import { JwtService } from '@nestjs/jwt';
 
 /**
- * 管理端守卫：校验 Authorization: Bearer <token>
- * token 必须是管理员登录签发的（payload.role === 'admin'）
+ * Admin guard: validates Authorization: Bearer <token>
+ * The token must be issued by the admin login (payload.role === 'admin')
  */
 @Injectable()
 export class AdminGuard implements CanActivate {
@@ -19,7 +19,7 @@ export class AdminGuard implements CanActivate {
     const auth: string = req.headers.authorization || '';
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
     if (!token) {
-      throw new UnauthorizedException('未登录');
+      throw new UnauthorizedException('Not authenticated');
     }
     try {
       const payload = await this.jwtService.verifyAsync(token);
@@ -29,7 +29,7 @@ export class AdminGuard implements CanActivate {
       req.admin = payload;
       return true;
     } catch {
-      throw new UnauthorizedException('登录已失效，请重新登录');
+      throw new UnauthorizedException('Session expired, please log in again');
     }
   }
 }

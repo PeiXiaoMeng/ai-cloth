@@ -16,7 +16,7 @@ export class AuthController {
     return this.authService.wxLogin(body.code);
   }
 
-  // 获取当前用户信息 + 剩余试穿次数（含管理员调整的 bonus）
+  // Current user info + remaining try-on quota (including the admin-adjusted bonus)
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async me(@Req() req: Request & { userId: number }) {

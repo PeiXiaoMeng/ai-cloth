@@ -10,7 +10,7 @@ import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
-    // 静态资源：商品图片 / 上传的图片 / 试穿结果
+    // Static assets: item images / uploads / try-on results
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'public'),
       serveRoot: '/static',

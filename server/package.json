@@ -1,7 +1,7 @@
 {
   "name": "ai-cloth-server",
   "version": "1.0.0",
-  "description": "衣服商城小程序服务端（NestJS + Prisma + 阿里百炼试穿）",
+  "description": "Clothing mall backend (NestJS + Prisma + DashScope AI try-on)",
   "private": true,
   "scripts": {
     "build": "nest build",

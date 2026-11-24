@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** 管理员登录（账号密码来自环境变量，默认 admin / admin123456） */
+  /** Admin login (credentials come from environment variables, defaults: admin / admin123456) */
   async login(username: string, password: string) {
     const expectUser = process.env.ADMIN_USERNAME || 'admin';
     const expectPwd = process.env.ADMIN_PASSWORD || 'admin123456';
@@ -15,12 +15,12 @@ export class AdminService {
     return { username: expectUser };
   }
 
-  /** "新上"判断：创建时间在 30 天内 */
+  /** "New arrivals" flag: created within the last 30 days */
   isNewByCreatedAt(createdAt: Date): boolean {
     return Date.now() - new Date(createdAt).getTime() < 30 * 24 * 3600 * 1000;
   }
 
-  /** 商品列表（含动态计算的 isNew） */
+  /** Item list (with dynamically computed isNew) */
   async listItems() {
     const items = await this.prisma.clothingItem.findMany({
       orderBy: [{ sort: 'asc' }, { id: 'asc' }],
@@ -31,7 +31,7 @@ export class AdminService {
     }));
   }
 
-  /** 用户列表（含试穿次数统计） */
+  /** User list (with try-on quota stats) */
   async listUsers() {
     const limit = await this.settingsTryOnLimit();
     const users = await this.prisma.user.findMany({
@@ -55,17 +55,17 @@ export class AdminService {
     });
   }
 
-  /** 管理员调整用户试穿次数：delta 正加负减，单次 |delta| <= 30，剩余次数夹在 0~30 */
+  /** Admin adjusts a user's try-on quota: delta positive to add / negative to subtract, |delta| <= 30 per call, remaining quota clamped to 0~30 */
   async adjustQuota(userId: number, delta: number) {
     if (!Number.isInteger(delta) || delta === 0) {
-      throw new Error('调整次数必须是 非0 整数');
+      throw new Error('Delta must be a non-zero integer');
     }
     if (Math.abs(delta) > 30) {
-      throw new Error('单次最多只能调整 30 次');
+      throw new Error('A single adjustment can change the quota by at most 30');
     }
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      throw new Error('用户不存在');
+      throw new Error('User not found');
     }
     const limit = await this.settingsTryOnLimit();
     const used = await this.prisma.tryOnRecord.count({
@@ -73,7 +73,7 @@ export class AdminService {
     });
 
     let bonus = user.quotaBonus + delta;
-    // 剩余次数限制在 [0, 30] 区间内，防止误操作
+    // Clamp remaining quota to [0, 30] to guard against mis-operation
     let left = limit + bonus - used;
     if (left > 30) {
       bonus -= left - 30;

@@ -5,18 +5,18 @@ import { ItemsService } from './items.service';
 export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
 
-  // 首页商品列表
+  // Item list for the home page
   @Get()
   findAll() {
     return this.itemsService.findAll();
   }
 
-  // 商品详情
+  // Item detail
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const item = await this.itemsService.findOne(Number(id));
     if (!item) {
-      throw new NotFoundException('商品不存在');
+      throw new NotFoundException('Item not found');
     }
     return item;
   }
