@@ -1,0 +1,486 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #f5f6f8;
+  color: #333;
+}
+
+/* Login page */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  width: 360px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.login-title {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* Layout */
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 24px;
+  height: 56px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  font-weight: 700;
+  color: #ff4d6a;
+}
+
+.nav {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.nav-btn {
+  border: none;
+  background: transparent;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+}
+
+.nav-btn-active {
+  background: linear-gradient(90deg, #ff7d4d, #ff4d6a);
+  color: #fff;
+  font-weight: 600;
+}
+
+.logout {
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  color: #666;
+}
+
+.main {
+  padding: 24px;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Cards and tables */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.card h3 {
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.input {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #ff4d6a;
+}
+
+.select {
+  width: 100px;
+}
+
+.num {
+  width: 80px;
+}
+
+.btn {
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  margin-right: 8px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, #ff7d4d, #ff4d6a);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+}
+
+.btn-danger {
+  color: #ff4d6a;
+  border-color: #ffc9d4;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid #f0f1f3;
+  vertical-align: middle;
+}
+
+.table th {
+  color: #999;
+  font-weight: 500;
+}
+
+.thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #f0f1f3;
+  display: block;
+}
+
+.mono {
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  color: #666;
+}
+
+.badge-new {
+  background: #fff0e8;
+  color: #ff4d6a;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.badge-old {
+  color: #bbb;
+}
+
+.empty-cell {
+  text-align: center;
+  color: #999;
+  padding: 24px;
+}
+
+.hint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #999;
+}
+
+.banner {
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.error {
+  color: #d93025;
+  background: #fdeceb;
+}
+
+.tip {
+  color: #137333;
+  background: #e6f4ea;
+}
+
+.green {
+  color: #137333;
+}
+
+.red {
+  color: #d93025;
+}
+
+/* ==================== Mobile adaptation ==================== */
+@media (max-width: 768px) {
+  body {
+    -webkit-text-size-adjust: 100%;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Login page */
+  .login-wrap {
+    padding: 24px 16px;
+    align-items: flex-start;
+    padding-top: 15vh;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 28px 20px;
+    border-radius: 14px;
+  }
+
+  /* Top bar: brand on one row, nav on the next, logout merges into the nav row */
+  .topbar {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 10px 12px calc(10px + env(safe-area-inset-top));
+    gap: 10px;
+    row-gap: 10px;
+  }
+
+  .brand {
+    width: 100%;
+    font-size: 15px;
+    padding-right: 76px;
+  }
+
+  .nav {
+    order: 3;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .nav-btn {
+    flex: 1;
+    padding: 11px 8px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .logout {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  /* Content area */
+  .main {
+    padding: 12px;
+    max-width: 100%;
+  }
+
+  .card {
+    padding: 14px;
+    border-radius: 14px;
+    margin-bottom: 14px;
+  }
+
+  .card h3 {
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+
+  /* Forms: vertical stack, controls fill the width */
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .form-row .input,
+  .form-row .select,
+  .form-row .btn {
+    width: 100%;
+    max-width: none;
+  }
+
+  .form-row label,
+  .form-row img.thumb {
+    align-self: flex-start;
+  }
+
+  /* 16px inputs prevent iOS from auto-zooming on focus */
+  .input {
+    font-size: 16px;
+    padding: 10px 12px;
+  }
+
+  .num {
+    width: 88px;
+  }
+
+  .btn {
+    padding: 11px 14px;
+    font-size: 15px;
+    margin-right: 0;
+  }
+
+  /* Tables -> card list */
+  .table {
+    display: block;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody {
+    display: block;
+  }
+
+  .table tr {
+    display: block;
+    position: relative;
+    border: 1px solid #eef0f3;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #fff;
+  }
+
+  .table td {
+    display: block;
+    border: none;
+    padding: 6px 0;
+    font-size: 14px;
+    width: 100%;
+  }
+
+  /* Cells with a label: label on the left, value on the right */
+  .table td[data-label]:not([data-label='']) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .table td[data-label]:not([data-label=''])::before {
+    content: attr(data-label);
+    flex: 0 0 68px;
+    color: #999;
+    font-size: 13px;
+  }
+
+  /* Item card: thumbnail top-left, title right after it */
+  .table td.td-img {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    width: 56px;
+    padding: 0;
+  }
+
+  .table td.td-title {
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    padding-left: 68px;
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 1.35;
+    padding-bottom: 8px;
+  }
+
+  /* User card main title */
+  .table td.td-user {
+    font-weight: 600;
+    font-size: 15px;
+    padding-bottom: 4px;
+  }
+
+  /* Action buttons: split evenly across the row */
+  .table td.td-actions,
+  .table td.td-adjust {
+    display: flex;
+    gap: 10px;
+    padding-top: 12px;
+    margin-top: 6px;
+    border-top: 1px dashed #f0f1f3;
+  }
+
+  .table td.td-actions .btn,
+  .table td.td-adjust .btn {
+    flex: 1;
+    margin-right: 0;
+  }
+
+  .table td.td-adjust .num {
+    flex: 0 0 80px;
+  }
+
+  /* Slightly larger thumbnails for readability */
+  .thumb {
+    width: 56px;
+    height: 56px;
+  }
+
+  .hint {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .empty-cell {
+    padding: 20px 0;
+  }
+
+  .banner {
+    font-size: 13px;
+  }
+}
+
+/* Ultra-narrow screens (small Android / iPhone SE) */
+@media (max-width: 360px) {
+  .table td[data-label]:not([data-label=''])::before {
+    flex-basis: 56px;
+  }
+
+  .table td.td-actions .btn,
+  .table td.td-adjust .btn {
+    font-size: 14px;
+    padding: 10px 8px;
+  }
+}
