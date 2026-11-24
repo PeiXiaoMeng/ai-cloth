@@ -3,15 +3,16 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  // 初始化系统配置：每个用户可试穿次数（可修改数据库 Setting 表的 value 来调整）
+  // Initialize system settings: try-on quota per user (adjust via the Setting table's value)
   await prisma.setting.upsert({
     where: { key: 'TRY_ON_LIMIT' },
     update: {},
     create: { key: 'TRY_ON_LIMIT', value: '3' },
   });
 
-  // 初始化衣服数据（图片放在 server/public/clothes/ 下）
-  // 分类：上衣 / 裤子；"新上"不再入库，由服务端按创建时间（30天内）动态计算
+  // Seed clothing items (images live under server/public/clothes/)
+  // Categories: 上衣 (tops) / 裤子 (bottoms); "new arrivals" is not stored — computed
+  // dynamically by the server based on creation time (within 30 days)
   const items = [
     { title: 'Light Blue Graphic T-Shirt', image: '/static/clothes/1.jpg', category: '上衣', sort: 1 },
     { title: 'Dark Brown Leather Jacket', image: '/static/clothes/2.jpg', category: '上衣', sort: 2 },
@@ -21,14 +22,14 @@ async function main() {
     { title: 'White Belted Trench Coat', image: '/static/clothes/6.jpg', category: '上衣', sort: 6 },
   ];
 
-  // 以图片文件为准，清空后重建（开发阶段使用；先清试穿记录避免外键约束）
+  // Wipe and rebuild items (dev only; clear try-on records first to avoid FK constraints)
   await prisma.tryOnRecord.deleteMany({});
   await prisma.clothingItem.deleteMany({});
   for (const item of items) {
     await prisma.clothingItem.create({ data: item });
   }
 
-  console.log('seed 完成：', await prisma.clothingItem.count(), '件衣服');
+  console.log('seed done:', await prisma.clothingItem.count(), 'items');
 }
 
 main()

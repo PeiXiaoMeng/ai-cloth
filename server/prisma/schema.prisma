@@ -7,38 +7,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 衣服商品
+// Clothing item
 model ClothingItem {
   id        Int      @id @default(autoincrement())
-  title     String   // 例如：棉马甲 130-170码
-  image     String   // 商品图片（/static/uploads/clothes/xxx.jpg）
-  badge     String   @default("试穿") // 角标
-  category  String   @default("") // 分类：衣服 / 裤子
-  isNew     Boolean  @default(false) // 是否新品（“新上”tab）
-  sort      Int      @default(0) // 排序，越小越靠前
+  title     String // e.g. "Light Blue Graphic T-Shirt"
+  image     String // item image path (/static/uploads/clothes/xxx.jpg)
+  badge     String   @default("试穿") // badge label rendered by the mini-program
+  category  String   @default("") // category: 上衣 (tops) / 裤子 (bottoms)
+  isNew     Boolean  @default(false) // whether it is a new arrival ("New" tab)
+  sort      Int      @default(0) // sort order, smaller values come first
   createdAt DateTime @default(now())
 
   tryOnRecords TryOnRecord[]
 }
 
-// 小程序用户
+// Mini-program user
 model User {
-  id        Int      @id @default(autoincrement())
-  openid    String   @unique
-  quotaBonus Int     @default(0) // 管理员调整的额外试穿次数（可正可负）
-  createdAt DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  openid     String   @unique
+  quotaBonus Int      @default(0) // extra try-on quota adjusted by the admin (can be positive or negative)
+  createdAt  DateTime @default(now())
 
   tryOnRecords TryOnRecord[]
 }
 
-// 试穿记录（成功一次消耗一次机会）
+// Try-on record (each successful try-on consumes one quota unit)
 model TryOnRecord {
   id        Int      @id @default(autoincrement())
   userId    Int
   itemId    Int
   status    String   @default("PENDING") // PENDING / SUCCESS / FAILED
-  inputImg  String?  // 用户上传的图片
-  resultImg String?  // 试穿结果图片
+  inputImg  String? // user-uploaded photo
+  resultImg String? // try-on result image
   createdAt DateTime @default(now())
 
   user User         @relation(fields: [userId], references: [id])
@@ -47,7 +47,7 @@ model TryOnRecord {
   @@index([userId, status])
 }
 
-// 系统配置（键值对），例如 TRY_ON_LIMIT = 3
+// System settings (key-value), e.g. TRY_ON_LIMIT = 3
 model Setting {
   key       String   @id
   value     String
