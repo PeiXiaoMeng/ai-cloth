@@ -36,9 +36,10 @@ model TryOnRecord {
   id        Int      @id @default(autoincrement())
   userId    Int
   itemId    Int
-  status    String   @default("PENDING") // PENDING / SUCCESS / FAILED
+  status    String   @default("PENDING") // PENDING / PROCESSING / SUCCESS / FAILED
   inputImg  String? // user-uploaded photo
   resultImg String? // try-on result image
+  errorMsg  String? // failure reason, set when status = FAILED
   createdAt DateTime @default(now())
 
   user User         @relation(fields: [userId], references: [id])

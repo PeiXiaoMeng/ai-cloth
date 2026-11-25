@@ -22,18 +22,14 @@ AI-powered virtual try-on platform: full-stack implementation with NestJS + Pris
 
 ## Roadmap
 
-> Current version: **v0.1.0 (MVP)** — see [Releases](../../releases) for the changelog.
+> Current version: **v0.2.0 (MVP)** — see [Releases](../../releases) for the changelog.
 
 - [x] **v0.1.0 — MVP**
   - Synchronous AI try-on, clothing mall, quota management, role-based admin
 
-- [ ] **v0.2.0 — Async try-on (task queue)**
-  - Replace the synchronous try-on (a single long HTTP request, up to 180s client timeout) with an async job pipeline:
-    upload photo → return a `taskId` immediately → AI job queued in **BullMQ** (Redis) → client polls task status → result ready
-  - Task state machine (`PENDING / PROCESSING / SUCCESS / FAILED`) persisted in the database
-  - Automatic retry with backoff on AI failures, dead-letter handling for poisoned tasks
-  - Concurrency control to protect the AI quota; per-user rate limiting
-  - Motivation: eliminates long-lived HTTP connections, client timeouts and request-blocking under concurrency
+- [x] **v0.2.0 — Async try-on (task queue)**
+  - Replaced synchronous try-on with an async task pipeline: jobs are queued in **BullMQ** (Redis)
+  - Load-Test Concurrency Verification, Data Isolation & Cleanup
 
 - [ ] **v0.3.0 — Item search (Elasticsearch)**
   - Full-text search over item titles with the **IK analyzer** (Chinese-aware tokenization)

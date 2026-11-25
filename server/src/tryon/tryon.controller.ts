@@ -16,10 +16,11 @@ export class TryonController {
   ) {}
 
   /**
-   * Try-on endpoint:
+   * Async try-on endpoint:
    * - Requires auth (Authorization: Bearer <token>)
    * - multipart/form-data: file = user-uploaded photo
-   * - Validates remaining quota server-side, then calls DashScope and returns the result
+   * - Validates quota and in-flight tasks server-side, then enqueues the AI job
+   * - Returns immediately with the task id; poll GET task/:id for the result
    */
   @Post(':itemId')
   @UseGuards(JwtAuthGuard)
@@ -56,22 +57,20 @@ export class TryonController {
     if (!file) {
       throw new BadRequestException('Please upload a photo of yourself');
     }
-    const protocol = req.protocol;
-    const host = req.get('host');
     // Publicly accessible base URL for images: prefer PUBLIC_BASE_URL (tunnel / production domain)
     const baseUrl = (
-        process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`
+      process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`
     ).replace(/\/$/, '');
-    console.log(baseUrl)
-    console.log(`${baseUrl}/static/uploads/person/${file.filename}`)
     const record = await this.tryonService.tryOn({
       userId: req.userId,
       itemId: Number(itemId),
       personImageUrl: `${baseUrl}/static/uploads/person/${file.filename}`,
       baseUrl,
     });
+    // Respond right away: the client polls task/:id instead of holding a long HTTP request
     return {
-      ...record,
+      taskId: record.id,
+      status: record.status,
       ...(await this.tryonService.leftCount(req.userId)),
     };
   }
@@ -83,11 +82,21 @@ export class TryonController {
     return this.tryonService.leftCount(req.userId);
   }
 
-  // Get a single try-on record
-  @Get('record/:id')
+  /**
+   * Poll a try-on task's status (owned by the current user):
+   * PENDING -> PROCESSING -> SUCCESS (with resultImg) | FAILED (with errorMsg)
+   */
+  @Get('task/:id')
   @UseGuards(JwtAuthGuard)
-  async record(@Req() req: Request & { userId: number }, @Param('id') id: string) {
-    return this.tryonService.getRecord(Number(id), req.userId);
+  async task(@Req() req: Request & { userId: number }, @Param('id') id: string) {
+    const record = await this.prisma.tryOnRecord.findFirst({
+      where: { id: Number(id), userId: req.userId },
+      select: { id: true, status: true, resultImg: true, errorMsg: true, createdAt: true },
+    });
+    if (!record) {
+      throw new BadRequestException('Task not found');
+    }
+    return record;
   }
 
   // My try-on history
