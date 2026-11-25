@@ -33,6 +33,12 @@ export class DashscopeService {
     this.logger.log(`[tryOn] start, model=${this.model}, person=${personImageUrl}, garment=${garmentImageUrl}`);
     if (this.mock || !this.apiKey) {
       this.logger.warn('[tryOn] MOCK mode or API key not configured, returning the person image as-is');
+      // Simulated AI latency so the async pipeline (queueing, concurrency cap) is observable in dev.
+      // Set DASHSCOPE_MOCK_DELAY=0 for instant responses.
+      const delayMs = Number(process.env.DASHSCOPE_MOCK_DELAY ?? 5000);
+      if (delayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
       return personImageUrl;
     }
 
