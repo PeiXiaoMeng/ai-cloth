@@ -80,17 +80,27 @@ export function fetchQuota(): Promise<TryOnQuota> {
   return request<TryOnQuota>('/try-on/quota')
 }
 
-/** Upload a photo and try on (synchronous result) */
-export function uploadAndTryOn(
+/** Try-on task status payload returned by GET /try-on/task/:id */
+export interface TryonTask {
+  id: number
+  status: 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED'
+  resultImg: string | null
+  errorMsg: string | null
+  createdAt: string
+}
+
+/** Submit a photo for try-on: the server returns a taskId immediately; poll fetchTask for the result */
+export function submitTryOn(
   itemId: string | number,
   filePath: string,
-): Promise<TryOnQuota & { id: number; resultImg: string | null }> {
+): Promise<TryOnQuota & { taskId: number; status: string }> {
   return new Promise((resolve, reject) => {
     Taro.uploadFile({
       url: `${BASE_URL}/try-on/${itemId}`,
       filePath,
       name: 'file',
-      timeout: 180000,
+      // Only the upload is synchronous now; AI generation happens in the server's task queue
+      timeout: 30000,
       header: {
         Authorization: `Bearer ${getToken()}`,
       },
@@ -119,6 +129,11 @@ export function uploadAndTryOn(
       fail: (err) => reject(new Error(err.errMsg || 'Upload failed')),
     })
   })
+}
+
+/** Poll a try-on task's status by id */
+export function fetchTask(taskId: number | string): Promise<TryonTask> {
+  return request<TryonTask>(`/try-on/task/${taskId}`)
 }
 
 /** Try-on history record */

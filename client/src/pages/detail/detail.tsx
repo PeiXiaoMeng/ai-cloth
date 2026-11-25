@@ -6,13 +6,17 @@ import {
   ensureLogin,
   fetchItemDetail,
   fetchQuota,
+  fetchTask,
   resolveImg,
-  uploadAndTryOn,
+  submitTryOn,
 } from '../../services/api'
+import type { TryonTask } from '../../services/api'
 import QuotaPoster from '../../components/QuotaPoster'
 import type { ClothingItem, TryOnQuota } from '../../../types'
 
 import './detail.scss'
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export default function Detail() {
   const router = useRouter()
@@ -81,7 +85,7 @@ export default function Detail() {
     })
   }
 
-  // Try-on button: login first -> check quota -> check photo -> upload and call try-on
+  // Try-on button: login first -> check quota -> check photo -> submit -> poll the task status
   const handleTryOn = async () => {
     if (submitting) return
 
@@ -118,33 +122,30 @@ export default function Detail() {
       return
     }
 
-    // 4. Upload the photo and try on (retry once after re-login if the session expired between requests)
+    // 4. Submit the photo; the server returns a taskId immediately (retry once after re-login if the session expired)
     setSubmitting(true)
-    Taro.showLoading({ title: 'Generating try-on, please wait...', mask: true })
+    Taro.showLoading({ title: 'Uploading photo...', mask: true })
+    let taskId: number
     try {
-      let record
+      let res
       try {
-        record = await uploadAndTryOn(itemId, photo)
+        res = await submitTryOn(itemId, photo)
       } catch (e) {
         const msg = ((e as Error).message || '').toLowerCase()
         if (msg.includes('log in')) {
           clearToken()
           await ensureLogin()
-          record = await uploadAndTryOn(itemId, photo)
+          res = await submitTryOn(itemId, photo)
         } else {
           throw e
         }
       }
-      setResultImg(resolveImg(record.resultImg))
+      taskId = res.taskId
       setQuota({
-        tryOnLimit: record.tryOnLimit,
-        tryOnUsed: record.tryOnUsed,
-        tryOnLeft: record.tryOnLeft,
+        tryOnLimit: res.tryOnLimit,
+        tryOnUsed: res.tryOnUsed,
+        tryOnLeft: res.tryOnLeft,
       })
-      Taro.showToast({ title: 'Try-on successful', icon: 'success' })
-      // Auto-scroll to the bottom so the user sees the result immediately (incrementing value ensures the scroll triggers)
-      svCounter.current += 1
-      setSvScrollTop(1000000 + svCounter.current * 100)
     } catch (e) {
       Taro.hideLoading()
       const msg = ((e as Error).message || '').toLowerCase()
@@ -154,10 +155,59 @@ export default function Detail() {
         Taro.showModal({ title: 'Try-on failed', content: (e as Error).message || 'Try-on failed', showCancel: false })
       }
       loadQuota()
+      setSubmitting(false)
       return
     }
-    Taro.hideLoading()
-    setSubmitting(false)
+
+    // 5. Poll the task status until SUCCESS / FAILED (the server generates asynchronously in its task queue)
+    const POLL_INTERVAL = 2500
+    const MAX_WAIT_MS = 5 * 60 * 1000
+    const startAt = Date.now()
+    let consecutiveErrors = 0
+    try {
+      while (Date.now() - startAt < MAX_WAIT_MS) {
+        await sleep(POLL_INTERVAL)
+        let task: TryonTask
+        try {
+          task = await fetchTask(taskId)
+          consecutiveErrors = 0
+        } catch {
+          // Tolerate transient network errors; abort only after several in a row
+          consecutiveErrors += 1
+          if (consecutiveErrors >= 5) {
+            throw new Error('Network unstable, polling stopped. Check your history later')
+          }
+          continue
+        }
+
+        if (task.status === 'SUCCESS') {
+          Taro.hideLoading()
+          setResultImg(resolveImg(task.resultImg))
+          Taro.showToast({ title: 'Try-on successful', icon: 'success' })
+          // Auto-scroll to the bottom so the user sees the result immediately (incrementing value ensures the scroll triggers)
+          svCounter.current += 1
+          setSvScrollTop(1000000 + svCounter.current * 100)
+          return
+        }
+        if (task.status === 'FAILED') {
+          throw new Error(task.errorMsg || 'Try-on failed')
+        }
+
+        // Update the loading text by queue status: PENDING = waiting in queue, PROCESSING = generating
+        Taro.showLoading({
+          title: task.status === 'PENDING' ? 'Queued, please wait...' : 'Generating try-on, please wait...',
+          mask: true,
+        })
+      }
+      throw new Error('Try-on timed out, please check your history later')
+    } catch (e) {
+      Taro.hideLoading()
+      Taro.showModal({ title: 'Try-on failed', content: (e as Error).message || 'Try-on failed', showCancel: false })
+      loadQuota()
+      return
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const previewResult = () => {
