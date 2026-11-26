@@ -62,7 +62,12 @@ export async function ensureLogin(): Promise<string> {
 /** Image URL: build the full URL when the server returns a relative path */
 export function resolveImg(url: string | null | undefined): string {
   if (!url) return ''
-  return url.startsWith('http') ? url : `https://copilot-antivirus-scoreless.ngrok-free.dev${url}`
+  if (url.startsWith('http')) {
+    // Only our own static assets are available locally; keep other remote URLs as-is
+    const m = url.match(/^https?:\/\/[^/]+(\/static\/.*)$/)
+    return m ? `${BASE_URL}${m[1]}` : url
+  }
+  return `${BASE_URL}${url}`
 }
 
 /** Fetch the item list */
