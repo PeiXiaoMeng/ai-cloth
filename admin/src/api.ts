@@ -112,6 +112,11 @@ export function deleteItem(id: number): Promise<{ ok: boolean }> {
   return request(`/admin/items/${id}`, { method: 'DELETE' })
 }
 
+/** Rebuild the Elasticsearch search index from the database (fallback for sync drift) */
+export function reindexItems(): Promise<{ indexed: number; took: number; index: string }> {
+  return request('/admin/items/reindex', { method: 'POST' })
+}
+
 /** User list */
 export function fetchUsers(): Promise<AdminUser[]> {
   return request<AdminUser[]>('/admin/users')

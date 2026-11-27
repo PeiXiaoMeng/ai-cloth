@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createItem, deleteItem, fetchItems, updateItem, AdminItem } from '../api'
+import { createItem, deleteItem, fetchItems, reindexItems, updateItem, AdminItem } from '../api'
 
 // Category values are Chinese: they are data values shared with the server and mini-program
 const CATEGORIES = ['上衣', '裤子']
@@ -24,6 +24,10 @@ export default function ItemsPage() {
   const [editTitle, setEditTitle] = useState('')
   const [editCategory, setEditCategory] = useState('上衣')
   const [editFile, setEditFile] = useState<File | null>(null)
+
+  // Search index rebuild
+  const [reindexing, setReindexing] = useState(false)
+  const [reindexResult, setReindexResult] = useState('')
 
   const load = async () => {
     try {
@@ -88,6 +92,20 @@ export default function ItemsPage() {
     }
   }
 
+  const handleReindex = async () => {
+    setReindexing(true)
+    setError('')
+    try {
+      const r = await reindexItems()
+      setReindexResult(`Indexed ${r.indexed} items into ${r.index} in ${r.took}ms`)
+    } catch (e) {
+      setReindexResult('')
+      setError((e as Error).message)
+    } finally {
+      setReindexing(false)
+    }
+  }
+
   const handleDelete = async (item: AdminItem) => {
     if (!window.confirm(`Delete "${item.title}"? Its try-on records will also be removed`)) return
     try {
@@ -140,6 +158,21 @@ export default function ItemsPage() {
 
       {error && <div className='error banner'>{error}</div>}
       {tip && <div className='tip banner'>{tip}</div>}
+
+      <section className='card'>
+        <h3>Search Index</h3>
+        <div className='form-row'>
+          <button className='btn' disabled={reindexing} onClick={handleReindex}>
+            {reindexing ? 'Rebuilding...' : 'Rebuild index'}
+          </button>
+          {reindexResult && <span className='hint'>{reindexResult}</span>}
+        </div>
+        <p className='hint'>
+          Item changes sync to Elasticsearch asynchronously via the outbox queue (usually within a
+          few seconds). Use this button to force a full rebuild if the search index ever drifts from
+          the database.
+        </p>
+      </section>
 
       <section className='card'>
         <h3>Items ({items.length})</h3>
@@ -223,7 +256,7 @@ export default function ItemsPage() {
             )}
           </tbody>
         </table>
-        <p className='hint'>Note: "New" is determined automatically by the server based on the item's creation time — items created within 30 days count as new and expire automatically afterwards.</p>
+        <p className='hint'>Note: "New" is determined automatically by the server based on the item's creation time — items created within 30 days count as new and expire automatically afterwards. Every add / edit / delete also emits an outbox event that keeps the Elasticsearch search index in sync.</p>
       </section>
     </div>
   )
