@@ -1,0 +1,158 @@
+// Pin the native page element: rules out any page-level scrolling/bounce
+page {
+  height: 100%;
+  overflow: hidden;
+}
+
+.page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f5f6f8;
+}
+
+// Input + clear + Search button
+.search-row {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 24px 24px 0;
+}
+
+.input-wrap {
+  flex: 1;
+  position: relative;
+  background: #fff;
+  border-radius: 36px;
+  height: 72px;
+  padding: 0 60px 0 30px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.input {
+  width: 100%;
+  font-size: 28px;
+}
+
+.clear {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #bbb;
+  font-size: 36px;
+  padding: 0 10px;
+}
+
+.search-btn {
+  margin-left: 24px;
+  color: #ff4d6a;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+// Wrapper constrains the ScrollView height: WeChat ScrollView ignores flex:1,
+// without it the whole page stretches and scrolls along with any swipe
+.body-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.body {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-title {
+  font-size: 28px;
+  color: #333;
+  font-weight: 600;
+}
+
+.section-clear {
+  font-size: 24px;
+  color: #999;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.tag {
+  background: #fff;
+  color: #666;
+  font-size: 26px;
+  padding: 12px 28px;
+  border-radius: 32px;
+  margin: 0 20px 20px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.empty {
+  display: block;
+  text-align: center;
+  color: #999;
+  font-size: 26px;
+  padding: 40px 0;
+}
+
+// Result rows
+.result {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.result-img {
+  width: 160px;
+  height: 160px;
+  border-radius: 12px;
+  background: #f0f1f3;
+  flex-shrink: 0;
+}
+
+.result-info {
+  flex: 1;
+  margin-left: 24px;
+}
+
+.result-title {
+  display: block;
+  font-size: 28px;
+  color: #333;
+  line-height: 1.4;
+}
+
+// Highlighted keyword fragment inside the title
+.hit {
+  color: #ff4d6a;
+  font-weight: 600;
+}
+
+.result-cat {
+  display: block;
+  font-size: 24px;
+  color: #999;
+  margin-top: 12px;
+}

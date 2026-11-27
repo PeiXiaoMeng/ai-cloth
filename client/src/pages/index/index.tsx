@@ -34,6 +34,24 @@ export default function Index() {
   // Cache each image's aspect ratio so switching tabs needs no re-fetch
   const ratioCache = useRef<Map<number, number>>(new Map())
 
+  // Custom navigation: offset content below the status bar and align with the WeChat capsule
+  const sysInfo = Taro.getSystemInfoSync()
+  const statusBarHeight = sysInfo.statusBarHeight || 0
+  // Fallbacks match the SCSS defaults (72rpx height = 36 logical px)
+  let capsuleSafeRight = 0 // logical px reserved on the right edge for the capsule
+  let capsuleTop = 10 // gap between the status bar and the search bar
+  let capsuleHeight = 36
+  try {
+    const menu = Taro.getMenuButtonBoundingClientRect()
+    if (menu && menu.left > 0) {
+      capsuleSafeRight = sysInfo.windowWidth - menu.left + 8
+      capsuleTop = Math.max(menu.top - statusBarHeight, 0)
+      capsuleHeight = menu.height
+    }
+  } catch {
+    // Non-WeChat platforms have no capsule, keep the defaults
+  }
+
   // Load only on first mount; returning to the home page does not re-fetch, avoiding flicker entirely
   useEffect(() => {
     loadItems()
@@ -107,8 +125,19 @@ export default function Index() {
 
   return (
     <View className='page'>
-      {/* Top tabs: fixed */}
-      <View className='header'>
+      {/* Custom header: fake search bar (tap to enter search page) + tabs */}
+      <View className='header' style={{ paddingTop: `${statusBarHeight}px` }}>
+        <View
+          className='search-bar'
+          style={{
+            marginRight: `${capsuleSafeRight}px`,
+            marginTop: `${capsuleTop}px`,
+            height: `${capsuleHeight}px`,
+          }}
+          onClick={() => Taro.navigateTo({ url: '/pages/search/search' })}
+        >
+          <Text className='search-placeholder'>Search items</Text>
+        </View>
         <View className='tabs'>
           {TABS.map((t) => (
             <View

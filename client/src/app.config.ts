@@ -4,6 +4,7 @@ export default defineAppConfig({
     'pages/detail/detail',
     'pages/mine/mine',
     'pages/history/history',
+    'pages/search/search',
   ],
   tabBar: {
     color: '#999999',

@@ -29,6 +29,23 @@
   box-sizing: border-box;
 }
 
+// Fake search bar: tap to enter the search page
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 36px;
+  height: 72px;
+  padding: 0 30px;
+  margin: 20px 0 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.search-placeholder {
+  color: #bbb;
+  font-size: 28px;
+}
+
 // Top tabs
 .tabs {
   display: flex;

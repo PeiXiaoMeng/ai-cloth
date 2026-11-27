@@ -155,3 +155,26 @@ export interface HistoryRecord {
 export function fetchHistory(): Promise<HistoryRecord[]> {
   return request<HistoryRecord[]>('/try-on/history')
 }
+
+/** Search result item returned by GET /items/search (Elasticsearch) */
+export interface SearchItem {
+  id: number
+  title: string
+  category: string // Tops | Bottoms (already mapped by the sync layer)
+  isNew: boolean
+  image: string
+  highlight?: string // title with <em>...</em> around the matched words
+}
+
+/** Search response payload */
+export interface SearchResult {
+  items: SearchItem[]
+  total: number
+  took: number
+  available: boolean // false = Elasticsearch is down on the server
+}
+
+/** Full-text search across item titles */
+export function searchItems(q: string): Promise<SearchResult> {
+  return request<SearchResult>(`/items/search?q=${encodeURIComponent(q)}`)
+}
