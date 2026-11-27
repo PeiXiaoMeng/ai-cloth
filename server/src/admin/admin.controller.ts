@@ -18,6 +18,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AdminGuard } from './admin.guard';
 import { AdminService } from './admin.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ItemIndexService } from '../search/item-index.service';
 
 // Category values are Chinese on purpose: they are data values shared with the mini-program filters
 const CATEGORIES = ['上衣', '裤子'];
@@ -56,6 +57,7 @@ export class AdminController {
     private readonly adminService: AdminService,
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly itemIndex: ItemIndexService,
   ) {}
 
   /** Admin login: returns a token valid for 7 days */
@@ -98,14 +100,19 @@ export class AdminController {
     if (!file) throw new BadRequestException('Item image is required');
 
     const max = await this.prisma.clothingItem.aggregate({ _max: { sort: true } });
-    const item = await this.prisma.clothingItem.create({
-      data: {
-        title,
-        category,
-        image: `/static/uploads/items/${file.filename}`,
-        sort: (max._max.sort ?? 0) + 1,
-        badge: '试穿', // badge label rendered by the mini-program
-      },
+    // Business row + outbox event in ONE transaction: "DB committed but event lost" is impossible
+    const item = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.clothingItem.create({
+        data: {
+          title,
+          category,
+          image: `/static/uploads/items/${file.filename}`,
+          sort: (max._max.sort ?? 0) + 1,
+          badge: '试穿', // badge label rendered by the mini-program
+        },
+      });
+      await tx.itemIndexOutbox.create({ data: { itemId: created.id, op: 'UPSERT' } });
+      return created;
     });
     return { ...item, isNew: true };
   }
@@ -139,9 +146,13 @@ export class AdminController {
     if (Object.keys(data).length === 0) {
       throw new BadRequestException('Nothing to update');
     }
-    const item = await this.prisma.clothingItem.update({
-      where: { id: Number(id) },
-      data,
+    const item = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.clothingItem.update({
+        where: { id: Number(id) },
+        data,
+      });
+      await tx.itemIndexOutbox.create({ data: { itemId: updated.id, op: 'UPSERT' } });
+      return updated;
     });
     return { ...item, isNew: this.adminService.isNewByCreatedAt(item.createdAt) };
   }
@@ -152,9 +163,20 @@ export class AdminController {
   async deleteItem(@Param('id') id: string) {
     const exist = await this.prisma.clothingItem.findUnique({ where: { id: Number(id) } });
     if (!exist) throw new BadRequestException('Item not found');
-    await this.prisma.tryOnRecord.deleteMany({ where: { itemId: Number(id) } });
-    await this.prisma.clothingItem.delete({ where: { id: Number(id) } });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.tryOnRecord.deleteMany({ where: { itemId: Number(id) } });
+      await tx.clothingItem.delete({ where: { id: Number(id) } });
+      // DELETE event: the worker removes the doc from Elasticsearch
+      await tx.itemIndexOutbox.create({ data: { itemId: Number(id), op: 'DELETE' } });
+    });
     return { ok: true };
+  }
+
+  /** Rebuild the Elasticsearch index from the database (fallback for sync drift) */
+  @Post('items/reindex')
+  @UseGuards(AdminGuard)
+  reindexItems() {
+    return this.itemIndex.rebuild();
   }
 
   // ---------- User quota management ----------

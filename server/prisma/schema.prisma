@@ -48,6 +48,21 @@ model TryOnRecord {
   @@index([userId, status])
 }
 
+// Outbox event for DB -> Elasticsearch sync (v0.3.0 item search).
+// The queue carries only itemId; the worker re-reads the latest row from the DB,
+// so repeated or out-of-order jobs always write the freshest state to ES.
+model ItemIndexOutbox {
+  id        Int      @id @default(autoincrement())
+  itemId    Int      // target ClothingItem id
+  op        String   // UPSERT | DELETE
+  status    String   @default("PENDING") // PENDING | QUEUED | DONE | DEAD
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt]) // poller scans by status=PENDING ordered by createdAt
+}
+
 // System settings (key-value), e.g. TRY_ON_LIMIT = 3
 model Setting {
   key       String   @id
