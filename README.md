@@ -31,12 +31,8 @@ AI-powered virtual try-on platform: full-stack implementation with NestJS + Pris
   - Replaced synchronous try-on with an async task pipeline: jobs are queued in **BullMQ** (Redis)
   - Load-Test Concurrency Verification, Data Isolation & Cleanup
 
-- [ ] **v0.3.0 — Item search (Elasticsearch)**
-  - Full-text search over item titles with the **IK analyzer** (Chinese-aware tokenization)
-  - Filters (category, new arrivals) combined with multi-field sorted results
-  - Keyword highlighting and type-ahead suggestions (`completion` suggester)
-  - Database → Elasticsearch sync on every write, plus a **"rebuild index"** action in the admin panel as a fallback
-  - Search keyword popularity tracking
+- [x] **v0.3.0 — Item search (Elasticsearch)**
+  - Full-text search over item titles with the **IK analyzer** (Chinese-aware tokenization), with keyword highlighting
 
 - [ ] **v0.4.0 — Automated tests & CI**
   - Unit tests for service layer with **Jest** (mocking Prisma / DashScope clients)
